@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" ?>
+<Devices>
+
+    <K_type over_min="-199" over_max="1299" />
+    <B_type over_min="0" over_max="1800" /> 
+    <LVS mode="0" />
+    <DELT value="100" />
+    
+    <mvv id="1" type="8av">
+        <channel numb="0" type="K" sensor_name="BK3-50" description="Unit A10, AI1 : XP1-3 : 1(X)2(A)" min_range="0" max_range="1100" />
+	<channel numb="1" type="K" sensor_name="BK3-51" description="Unit A10, AI2 : XP1-3 : 3(X)4(A)" min_range="0" max_range="1100" />
+	<channel numb="2" type="K" sensor_name="BK3-52" description="Unit A10, AI3 : XP1-3 : 5(X)6(A)" min_range="0" max_range="1100" />
+	<channel numb="3" type="K" sensor_name="BK3-53" description="Unit A10, AI4 : XP1-3 : 7(X)8(A)" min_range="0" max_range="1100" />
+	<channel numb="4" type="K" sensor_name="BK3-54" description="Unit A10, AI5 : XP1-4 : 1(X)2(A)" min_range="0" max_range="1100" />
+	<channel numb="5" type="K" sensor_name="BK3-55" description="Unit A10, AI6 : XP1-4 : 3(X)4(A)" min_range="0" max_range="1100" />
+	<channel numb="6" type="K" sensor_name="BK3-56" description="Unit A10, AI7 : XP1-4 : 5(X)6(A)" min_range="0" max_range="1100" />
+	<channel numb="7" type="K" sensor_name="BK3-57" description="Unit A10, AI8 : XP1-4 : 7(X)8(A)" min_range="0" max_range="1100" />
+    </mvv> 
+    <mvv id="2" type="8av">
+        <channel numb="0" type="dP" a="1" b="2"  sensor_name="BK3-502" description="Unit A10, AI1 : XP1-3 : 1(X)2(A)" min_range="0" max_range="1100" />
+	<channel numb="1" type="dP" a="1" b="2" sensor_name="BK3-513" description="Unit A10, AI2 : XP1-3 : 3(X)4(A)" min_range="0" max_range="1100" />
+	<channel numb="2" type="dP" a="1" b="2" sensor_name="BK3-524" description="Unit A10, AI3 : XP1-3 : 5(X)6(A)" min_range="0" max_range="1100" />
+	<channel numb="3" type="dP" a="1" b="2" sensor_name="BK3-535" description="Unit A10, AI4 : XP1-3 : 7(X)8(A)" min_range="0" max_range="1100" />
+	<channel numb="4" type="dP" a="1" b="2" sensor_name="BK3-546" description="Unit A10, AI5 : XP1-4 : 1(X)2(A)" min_range="0" max_range="1100" />
+	<channel numb="5" type="dP" a="1" b="2" sensor_name="BK3-557" description="Unit A10, AI6 : XP1-4 : 3(X)4(A)" min_range="0" max_range="1100" />
+	<channel numb="6" type="dP" a="1" b="2" sensor_name="BK3-568" description="Unit A10, AI7 : XP1-4 : 5(X)6(A)" min_range="0" max_range="1100" />
+	<channel numb="7" type="dP" a="1" b="2" sensor_name="BK3-579" description="Unit A10, AI8 : XP1-4 : 7(X)8(A)" min_range="0" max_range="1100" />
+    </mvv> 
+    <mvv id="3" type="8av">
+        <channel numb="0" type="P" a="9.49" b="-17.6" sensor_name="BK3-02" description="Unit A10, AI1 : XP1-3 : 1(X)2(A)" min_range="0" max_range="1100" />
+	<channel numb="1" type="P" a="1" b="2" sensor_name="BK3-13" description="Unit A10, AI2 : XP1-3 : 3(X)4(A)" min_range="0" max_range="1100" />
+	<channel numb="2" type="P" a="1" b="2" sensor_name="BK3-24" description="Unit A10, AI3 : XP1-3 : 5(X)6(A)" min_range="0" max_range="1100" />
+	<channel numb="3" type="P" a="1" b="2" sensor_name="BK3-35" description="Unit A10, AI4 : XP1-3 : 7(X)8(A)" min_range="0" max_range="1100" />
+    </mvv> 
+    
+    
+</Devices>
+
