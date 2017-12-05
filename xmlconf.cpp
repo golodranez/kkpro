@@ -3,10 +3,11 @@
 #include <QDebug>
 #include <unistd.h>
 
-XmlConf::XmlConf(QString &fullConfig_in, QObject *parent) :
-    QObject(parent), fullConfig(fullConfig_in)
+XmlConf::XmlConf(QString &fullConfig_in, QString &fullcalibration_in, QObject *parent) :
+    QObject(parent), fullConfig(fullConfig_in), fullcalibration(fullcalibration_in)
 {
     confDoc = new QDomDocument;
+    calibrationDoc = new QDomDocument;
 
 }
 
@@ -40,10 +41,42 @@ int XmlConf::setConfFile(QString confFile_in)
     return 0;
 }
 
+int XmlConf::setCalibrationFile(QString confFile_in)
+{
+    calibrationFile = new QFile(confFile_in);
+    if (!calibrationFile->open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+            emit signalLog("Couldn't open conf file");
+            qDebug() << "Couldn't open conf file";
+            return -1;
+    }
+
+    fullcalibration = confFile->readAll();
+    calibrationFile->close();
+
+    if (!calibrationFile->open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+            emit signalLog("Couldn't open conf file");
+            qDebug() << "Couldn't open conf file";
+            return -1;
+    }
+
+
+    if (!calibrationDoc->setContent(calibrationFile))
+    {
+        emit signalLog("Conf file is bad XML");
+        qDebug() << "bad XML";
+        return -1;
+    }
+    return 0;
+}
+
 int XmlConf::parseConfig(MeasurData *measureData_in)
 {
 
     QDomElement docElem = confDoc->documentElement();
+    QDomElement calibElem = calibrationDoc->documentElement();
+
     QDomElement conf = docElem.firstChildElement("K_type");
     int k_min = conf.attribute("over_min").toLong();
     int k_max = conf.attribute("over_max").toLong();
@@ -107,12 +140,12 @@ int XmlConf::parseConfig(MeasurData *measureData_in)
                 md.comp_name = comp_sensor;
                 md.step_delta = delt_k;
             }
+
+
+
             if(type == "P")
             {
-                md.a_coeff = chElement.attribute("a").toFloat();
-                md.b_coeff = chElement.attribute("b").toFloat();
                 md.type = TYPE_P;
-
                 QString s_type = chElement.attribute("sub_type");
                 conf = docElem.firstChildElement(s_type);
                 md.over_min = conf.attribute("over_min").toFloat();
@@ -123,10 +156,7 @@ int XmlConf::parseConfig(MeasurData *measureData_in)
             }
             if(type == "dP")
             {
-                md.a_coeff = chElement.attribute("a").toFloat();
-                md.b_coeff = chElement.attribute("b").toFloat();
                 md.type = TYPE_dP;
-                
                 QString s_type = chElement.attribute("sub_type");
                 conf = docElem.firstChildElement(s_type);
                 md.over_min = conf.attribute("over_min").toFloat();
@@ -136,11 +166,7 @@ int XmlConf::parseConfig(MeasurData *measureData_in)
             }
             if(type == "TR")
             {
-                md.a_coeff = chElement.attribute("a").toFloat();
-                md.b_coeff = chElement.attribute("b").toFloat();
                 md.type = TYPE_TR;
-                
-                
                 conf = docElem.firstChildElement(type);
                 md.over_min = conf.attribute("over_min").toFloat();
                 md.over_max = conf.attribute("over_max").toFloat();
@@ -159,11 +185,19 @@ int XmlConf::parseConfig(MeasurData *measureData_in)
             }
 
             md.sensor_name = chElement.attribute("sensor_name");
+
+            if(isLineSignal(type))
+            {
+                QDomElement calib = calibElem.firstChildElement(md.sensor_name);
+                md.a_coeff = calib.attribute("a").toFloat();
+                md.b_coeff = calib.attribute("b").toFloat();
+            }
+
             if(type != "DI")
             {
                 md.min_range = chElement.attribute("min_range").toFloat();
                 md.max_range = chElement.attribute("max_range").toFloat();
-        	md.can_frame_id = getAVCanFrameId(mvv_can_id, channel_number);
+                md.can_frame_id = getAVCanFrameId(mvv_can_id, channel_number);
             }
             if(type == "DI")
             {

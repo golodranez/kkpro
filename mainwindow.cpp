@@ -33,8 +33,9 @@ MainClass::MainClass(QObject *parent)
 
 
 
-    confHandler = new XmlConf(fullConfig);
+    confHandler = new XmlConf(fullConfig, fullCalibration);
     confHandler->setConfFile("/opt/sntermo/conf.xml");
+    confHandler->setCalibrationFile("/opt/sntermo/calibrations.xml");
     confHandler->parseConfig(&measurData);
     //qDebug() << "Conf size" << fullConfig.length();
 

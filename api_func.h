@@ -83,6 +83,7 @@ int getMVVChannelID(int frame_id);
 int getMVVCanID(int frame_id);
 int getAVCanFrameId(int MVV_can_id, int ch_number);
 int getDICanFrameId(int MVV_can_id);
+bool isLineSignal(QString type);
 //int getTimeForSleep // !!! TO DO
 
 

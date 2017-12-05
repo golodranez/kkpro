@@ -27,3 +27,15 @@ int getDICanFrameId(int MVV_can_id)
 {
     return (int)((0 << 10) | ((14 & 31) << 5) | (MVV_can_id & 31));
 }
+
+bool isLineSignal(QString type)
+{
+    if(type == "dP" || type == "P" || type == "TR")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}

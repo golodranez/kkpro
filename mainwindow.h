@@ -34,7 +34,7 @@ public:
 
 private:
     XmlConf *confHandler;
-    QString fullConfig;
+    QString fullConfig, fullCalibration;
     QVector <Reg_t> HoldingsRegs;
     QVector <Reg_t> InputsRegs;
     QMutex dataMutex;
