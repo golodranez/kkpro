@@ -64,7 +64,7 @@ void ModBusServer::incomingConnection(int handle)
                 socketPool[i].mbSlave->start();
 
         //        qDebug() << i << " new Connection\t " <<  active_connections;
-                usleep(500000);
+                //usleep(500000);
                 break;
             }
         }

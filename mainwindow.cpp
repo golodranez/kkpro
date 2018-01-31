@@ -32,6 +32,7 @@ MainClass::MainClass(QObject *parent)
     }
 
 
+    calibrationsIsON = true;
 
     confHandler = new XmlConf(fullConfig, fullCalibration);
     confHandler->setConfFile("/opt/sntermo/conf.xml");
@@ -47,12 +48,14 @@ MainClass::MainClass(QObject *parent)
     }
 //    InputsRegs.resize(measurData.frameMap.size() * 3 + 1);
 
-    HoldingsRegs.resize(2000);
-    for(int i = 0; i < 2000; i++)
+    HoldingsRegs.resize(HOLDINGS_AMOUNT);
+    for(int i = 0; i < HOLDINGS_AMOUNT; i++)
     {
-	HoldingsRegs[i].reg[0] = 0;
-	HoldingsRegs[i].reg[1] = 0;
+        HoldingsRegs[i].reg[0] = 0;
+        HoldingsRegs[i].reg[1] = 0;
     }
+    setStartCalibrationToMB();
+
 /*    HoldingsRegs.resize(2);
     HoldingsRegs[0].reg.resize(2);
     HoldingsRegs[1].reg.resize(2);
@@ -84,6 +87,9 @@ MainClass::MainClass(QObject *parent)
     mbServer->moveToThread(mbThread);
     mbThread->start();
 
+
+
+
     usleep(130000);
 
     QTimer *tim = new QTimer;
@@ -95,15 +101,15 @@ MainClass::MainClass(QObject *parent)
     {
         can = new Can(1, &measurData);
         can->init(BasicCAN);
-	can->setMutex(&dataMutex);
+        can->setMutex(&dataMutex);
 
-	QThread *canTxThread = new QThread;
-	can->moveToThread(canTxThread);
-	canTxThread->start();
+        QThread *canTxThread = new QThread;
+        can->moveToThread(canTxThread);
+        canTxThread->start();
 
-	QTimer *canTxTimer = new QTimer;
-	connect(canTxTimer, SIGNAL(timeout()), can, SLOT(txCicle()));
-	canTxTimer->start(100);
+        QTimer *canTxTimer = new QTimer;
+        connect(canTxTimer, SIGNAL(timeout()), can, SLOT(txCicle()));
+        canTxTimer->start(100);
     }
 
     confServer = new QTcpServer;
@@ -173,15 +179,12 @@ void MainClass::proceedData()
 
             case TYPE_P:
             case TYPE_dP:
-                calcPressure(i);
+            case TYPE_TR:
+                calcLineSignal(i);
                 break;
 
             case TYPE_S:
                 calcOffset(i);
-                break;
-
-            case TYPE_TR:
-                calcTR(i);
                 break;
 
             default:
@@ -221,7 +224,7 @@ void MainClass::proceedData()
     
 
 
-    for(int i = 0; i < measurData.frameMap.size() - 1; i++) // minus 1 потому что двери отдельно
+    for(int i = 0; i < measurData.frameMap.size(); i++)
     {
     //qDebug() << "Data[" << i << "]: " << measurData.dataToSend[measurData.frameMap[i]].data;
         ConvertRegisters::floatToInvFlModbus(measurData.dataToSend[measurData.frameMap[i]].data, i*3, HoldingsRegs);
@@ -241,6 +244,21 @@ void MainClass::proceedData()
 
 
 
+}
+
+void MainClass::setStartCalibrationToMB()
+{
+    for(int i = 0; i < measurData.frameMap.size(); i++)
+    {
+        if(measurData.dataToSend[measurData.frameMap[i]].type == TYPE_dP || measurData.dataToSend[measurData.frameMap[i]].type == TYPE_P
+                || measurData.dataToSend[measurData.frameMap[i]].type == TYPE_TR)
+        {
+            ConvertRegisters::floatToInvFlModbus(measurData.dataToSend[measurData.frameMap[i]].a_coeff,
+                CALIBRATIONS_START_REG + i*4, HoldingsRegs);
+            ConvertRegisters::floatToInvFlModbus(measurData.dataToSend[measurData.frameMap[i]].b_coeff,
+                CALIBRATIONS_START_REG + i*4+2, HoldingsRegs);
+        }
+    }
 }
 
 void MainClass::checkCommand()
@@ -276,6 +294,23 @@ void MainClass::checkCommand()
 		}			
 	}
 
+    unsigned short int calibration_command = ConvertRegisters::toShort(HoldingsRegs, CALIBRATIONS_COMMAND_REG);
+
+    if(calibration_command == RESET_CALIBRATION_COMMAND)
+    {
+        resetCalibrations();
+        ConvertRegisters::shortToModbus(0, CALIBRATIONS_COMMAND_REG, HoldingsRegs);
+        return;
+    }
+
+    if(calibration_command == RECORD_CALIBRATION_COMMAND)
+    {
+        qDebug() << "record command recv";
+        recordCalibrations();
+        ConvertRegisters::shortToModbus(0, CALIBRATIONS_COMMAND_REG, HoldingsRegs);
+        return;
+    }
+
 }
 
 void MainClass::kvitCommand()
@@ -300,6 +335,30 @@ void MainClass::disableChCommand(int channel)
     measurData.dataToSend[measurData.frameMap[channel]].mb_status = CH_DISABLED;
 }
 
+void MainClass::resetCalibrations()
+{
+    calibrationsIsON = false;
+}
+
+void MainClass::recordCalibrations()
+{
+    for(int i = 0; i < measurData.frameMap.size(); i++)
+    {
+        if(measurData.dataToSend[measurData.frameMap[i]].type == TYPE_dP || measurData.dataToSend[measurData.frameMap[i]].type == TYPE_P
+                || measurData.dataToSend[measurData.frameMap[i]].type == TYPE_TR)
+        {
+            measurData.dataToSend[measurData.frameMap[i]].a_coeff =
+                    ConvertRegisters::toFloatFromInverse(HoldingsRegs, CALIBRATIONS_START_REG + i * 4);
+            measurData.dataToSend[measurData.frameMap[i]].b_coeff =
+                    ConvertRegisters::toFloatFromInverse(HoldingsRegs, CALIBRATIONS_START_REG + i * 4 + 2);
+            qDebug() << measurData.dataToSend[measurData.frameMap[i]].a_coeff;
+        }
+    }
+    qDebug() << "Record Calibration!";
+    confHandler->recordCalibrations(&measurData);
+    calibrationsIsON = true;
+}
+
 void MainClass::confConnection()
 {
     confSocket = confServer->nextPendingConnection();
@@ -310,11 +369,14 @@ void MainClass::confConnection()
     qDebug() << "Conf len: " << fullConfig.length() <<  "   write: " << i;
 }
 
-void MainClass::calcPressure(int i)
+void MainClass::calcLineSignal(int i)
 {
-    float P_mv = measurData.dataToSend[measurData.frameMap[i]].data;
-    measurData.dataToSend[measurData.frameMap[i]].data =  measurData.dataToSend[measurData.frameMap[i]].a_coeff * P_mv +
+    if(calibrationsIsON)
+    {
+        float P_mv = measurData.dataToSend[measurData.frameMap[i]].data;
+        measurData.dataToSend[measurData.frameMap[i]].data =  measurData.dataToSend[measurData.frameMap[i]].a_coeff * P_mv +
                                                              measurData.dataToSend[measurData.frameMap[i]].b_coeff;
+    }
 }
 
 void MainClass::calcTempK(int i)
@@ -379,12 +441,6 @@ void MainClass::calcTempB(int i)
     }
 }
 
-void MainClass::calcTR(int i)
-{
-    float R = measurData.dataToSend[measurData.frameMap[i]].data;
-    measurData.dataToSend[measurData.frameMap[i]].data = measurData.dataToSend[measurData.frameMap[i]].a_coeff * R +
-                                                             measurData.dataToSend[measurData.frameMap[i]].b_coeff;
-}
 
 void MainClass::calcOffset(int i)
 {
@@ -508,7 +564,7 @@ void MainClass::proceedGroup()
 
 }
 
-void MainClass::pressureDiffToZero()
+void MainClass::pressureDiffToZero() // is broken now
 {
     QDomElement docElem = confHandler->confDoc->documentElement();
     QDomElement element = docElem.firstChildElement("mvv");

@@ -22,6 +22,7 @@ public:
     int setConfFile(QString confFile_in);
     int setCalibrationFile(QString confFile_in);
     int parseConfig(MeasurData *measureData_in);
+    int recordCalibrations(MeasurData *measureData_in);
 
     QString &fullConfig, &fullcalibration;
 

@@ -47,6 +47,7 @@ private:
     QTcpServer *confServer;
     QTcpSocket *confSocket;
 
+    bool calibrationsIsON;
     int mvv_errors;
 
 
@@ -54,17 +55,19 @@ private:
 public slots:
     //void initData();
     void proceedData();
+    void setStartCalibrationToMB();
     void checkCommand();
     void kvitCommand();
     void kvitChCommand(int channel);
     void disableChCommand(int channel);
+    void resetCalibrations();
+    void recordCalibrations();
 
     void confConnection();
 
-    void calcPressure(int i);
+    void calcLineSignal(int i);
     void calcTempK(int i);
     void calcTempB(int i);
-    void calcTR(int i);
     void calcOffset(int i);
     void proceedStatus(int i);
     void proceedGroup();

@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    std::ofstream of;
+  /*  std::ofstream of;
     of.open("/opt/sntermo/dead.log");
 
     pid_t pid = fork();
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
                 break;
             }
         }
-    }
+    }*/
     MainClass w;
     return a.exec();
 }

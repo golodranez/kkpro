@@ -68,6 +68,7 @@ int XmlConf::setCalibrationFile(QString confFile_in)
         qDebug() << "bad XML";
         return -1;
     }
+    calibrationFile->close();
     return 0;
 }
 
@@ -236,6 +237,42 @@ int XmlConf::parseConfig(MeasurData *measureData_in)
         element = element.nextSiblingElement("mvv");
     }
 
+
+    return 0;
+}
+
+int XmlConf::recordCalibrations(MeasurData *measureData_in)
+{
+    QDomElement calibElem = calibrationDoc->documentElement();
+
+    for(int i = 0; i < measureData_in->frameMap.size(); i++)
+    {
+        if(measureData_in->dataToSend[measureData_in->frameMap[i]].type == TYPE_dP || measureData_in->dataToSend[measureData_in->frameMap[i]].type == TYPE_P
+                || measureData_in->dataToSend[measureData_in->frameMap[i]].type == TYPE_TR)
+        {
+            qDebug() << "name" << measureData_in->dataToSend[measureData_in->frameMap[i]].sensor_name;
+            QDomElement sensElem = calibElem.firstChildElement(measureData_in->dataToSend[measureData_in->frameMap[i]].sensor_name);
+            if(sensElem.isNull())
+            {
+                qDebug() << "No element";
+            }
+            qDebug() << "atributte: " << sensElem.attribute("a");
+            sensElem.setAttribute("a", QString::number(measureData_in->dataToSend[measureData_in->frameMap[i]].a_coeff));
+            qDebug() << "A xml " << measureData_in->dataToSend[measureData_in->frameMap[i]].a_coeff;
+            qDebug() << "atributte1: " << sensElem.attribute("a");
+            sensElem.setAttribute("b", QString::number(measureData_in->dataToSend[measureData_in->frameMap[i]].b_coeff));
+        }
+    }
+
+    QFile outfile("/opt/sntermo/calibrations.xml");
+    if(!outfile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qDebug() << "can't open XML to write";
+    }
+    QTextStream stream(&outfile);
+    stream << calibrationDoc->toString();
+    stream.flush();
+    outfile.close();
 
     return 0;
 }

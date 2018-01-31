@@ -21,6 +21,9 @@
 #define MB_WRONG_NUMOFREG (-6)
 #define MB_WRONG_FUNCTION_RECV (-7)
 
+
+#define HOLDINGS_AMOUNT (3000)
+
 class Reg_t
 {
 public:
