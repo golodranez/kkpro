@@ -3,8 +3,8 @@
 #include <QDebug>
 #include <unistd.h>
 
-XmlConf::XmlConf(QString &fullConfig_in, QString &fullcalibration_in, QObject *parent) :
-    QObject(parent), fullConfig(fullConfig_in), fullcalibration(fullcalibration_in)
+XmlConf::XmlConf(QString &fullConfig_in, QString &fullcalibration_in, QString &fullModbus_in, QObject *parent) :
+    QObject(parent), fullConfig(fullConfig_in), fullcalibration(fullcalibration_in), fullModbus(fullModbus_in)
 {
     confDoc = new QDomDocument;
     calibrationDoc = new QDomDocument;
@@ -43,6 +43,7 @@ int XmlConf::setConfFile(QString confFile_in)
 
 int XmlConf::setCalibrationFile(QString confFile_in)
 {
+    qDebug() << "MB for conf S read";
     calibrationFile = new QFile(confFile_in);
     if (!calibrationFile->open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -74,6 +75,55 @@ int XmlConf::setCalibrationFile(QString confFile_in)
 
 int XmlConf::parseConfig(MeasurData *measureData_in)
 {
+
+    modbusConfFile = new QFile("/opt/sntermo/modbus.xml");
+    if (!modbusConfFile->open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+            emit signalLog("Couldn't open conf file");
+            qDebug() << "Couldn't open conf file";
+            return -1;
+    }
+
+    qDebug() << "MB for conf Serv read";
+
+    fullModbus = confFile->readAll();
+    modbusConfFile->close();
+
+    modbusConfFile = new QFile("/opt/sntermo/modbus.xml");
+    if (!modbusConfFile->open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+            emit signalLog("Couldn't open conf file");
+            qDebug() << "Couldn't open conf file";
+            return -1;
+    }
+
+    modbusDoc = new QDomDocument;
+    if (!modbusDoc->setContent(modbusConfFile))
+    {
+        emit signalLog("Conf file is bad XML");
+        qDebug() << "bad XML";
+        return -1;
+    }
+    modbusConfFile->close();
+    qDebug() << "MB for Serv read";
+
+    QDomElement modbusElem = modbusDoc->documentElement();
+    qDebug() << "11";
+    QDomElement sensor_nameElem = modbusElem.firstChildElement("sensor");
+    qDebug() << "22";
+
+    int gg = 0; //for debug
+    while(!sensor_nameElem.isNull())
+    {
+
+        qDebug() << gg++;
+        measureData_in->modbusMap.push_back(sensor_nameElem.attribute("name"));
+        sensor_nameElem = sensor_nameElem.nextSiblingElement("name");
+    }
+    qDebug() << "MB for serv parse";
+
+
+
 
     QDomElement docElem = confDoc->documentElement();
     QDomElement calibElem = calibrationDoc->documentElement();

@@ -34,7 +34,7 @@ public:
 
 private:
     XmlConf *confHandler;
-    QString fullConfig, fullCalibration;
+    QString fullConfig, fullCalibration, fullModbus; // xml config
     QVector <Reg_t> HoldingsRegs;
     QVector <Reg_t> InputsRegs;
     QMutex dataMutex;
@@ -44,8 +44,8 @@ private:
     QMap <unsigned long, data_t> mDataforModBus;
 
 
-    QTcpServer *confServer;
-    QTcpSocket *confSocket;
+    QTcpServer *confServer, *confMBServer;
+    QTcpSocket *confSocket, *confMBSocket;
 
     bool calibrationsIsON;
     int mvv_errors;
@@ -64,6 +64,7 @@ public slots:
     void recordCalibrations();
 
     void confConnection();
+    void confMBConnection();
 
     void calcLineSignal(int i);
     void calcTempK(int i);

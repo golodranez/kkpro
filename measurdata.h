@@ -14,6 +14,7 @@ public:
     //data_t *md, *md_buff;
     QVector <unsigned long> frameMap; // value - can_id
     QMap <QString, unsigned long> sensorNameMap; // key - sensor name, value - can_id
+    QVector <QString> modbusMap; // Vector index - order in MB map, QString - sensor name
     QMap <unsigned long, data_t> mData; // key - can_id, value - data_t
     QMap <unsigned long, data_t> buff;  // mData buff
     QMap <unsigned long, data_t> dataToSend;

@@ -34,7 +34,7 @@ MainClass::MainClass(QObject *parent)
 
     calibrationsIsON = true;
 
-    confHandler = new XmlConf(fullConfig, fullCalibration);
+    confHandler = new XmlConf(fullConfig, fullCalibration, fullModbus);
     confHandler->setConfFile("/opt/sntermo/conf.xml");
     confHandler->setCalibrationFile("/opt/sntermo/calibrations.xml");
     confHandler->parseConfig(&measurData);
@@ -121,7 +121,19 @@ MainClass::MainClass(QObject *parent)
     {
                     qDebug() << "listen" ;
     }
-    connect(confServer, SIGNAL(newConnection()), this, SLOT(confConnection()));
+    qDebug() << "confS done";
+    confMBServer = new QTcpServer;
+    if(confMBServer->listen(QHostAddress::Any, 12345) == 0)
+    {
+        qDebug() << "listen error" << confMBServer->errorString();
+    }
+    else
+    {
+                    qDebug() << "listen" ;
+    }
+    qDebug() << "confMB done";
+    connect(confMBServer, SIGNAL(newConnection()), this, SLOT(confConnection()));
+    connect(confMBServer, SIGNAL(newConnection()), this, SLOT(confMBConnection()));
 
 
 
@@ -198,7 +210,7 @@ void MainClass::proceedData()
         // ERROR PROCCED
 
 
-///	if( (measurData.dataToSend[measurData.frameMap[i]].type == TYPE_B) && (measurData.dataToSend[measurData.frameMap[i]].data < -100) )
+//	if( (measurData.dataToSend[measurData.frameMap[i]].type == TYPE_B) && (measurData.dataToSend[measurData.frameMap[i]].data < -100) )
 //	{
 //	    measurData.dataToSend[measurData.frameMap[i]].data = -100;
 //	}
@@ -221,14 +233,16 @@ void MainClass::proceedData()
 
    sendMutex.lock();
 
-    
 
 
-    for(int i = 0; i < measurData.frameMap.size(); i++)
+
+    for(int i = 0; i < measurData.modbusMap.size(); i++)
     {
     //qDebug() << "Data[" << i << "]: " << measurData.dataToSend[measurData.frameMap[i]].data;
-        ConvertRegisters::floatToInvFlModbus(measurData.dataToSend[measurData.frameMap[i]].data, i*3, HoldingsRegs);
-        ConvertRegisters::shortToModbus((short int)(measurData.dataToSend[measurData.frameMap[i]].mb_status), i*3+2, HoldingsRegs);
+        ConvertRegisters::floatToInvFlModbus(measurData.dataToSend[measurData.sensorNameMap[measurData.modbusMap[i]]].data,
+                i*3, HoldingsRegs);
+        ConvertRegisters::shortToModbus((short int)(measurData.dataToSend[measurData.sensorNameMap[measurData.modbusMap[i]]].mb_status),
+                i*3+2, HoldingsRegs);
     }
 //    ConvertRegisters::shortToModbus((short int)measurData.dataToSend[measurData.frameMap[measurData.frameMap.size()-1]].bit.at(0)
 //            , measurData.frameMap.size()*3-3, HoldingsRegs);    // door 1
@@ -366,6 +380,16 @@ void MainClass::confConnection()
     tmp.append(fullConfig);
     int i = confSocket->write(tmp);
     confSocket->flush();
+    qDebug() << "Conf len: " << fullConfig.length() <<  "   write: " << i;
+}
+
+void MainClass::confMBConnection()
+{
+    confMBSocket = confMBServer->nextPendingConnection();
+    QByteArray tmp;
+    tmp.append(fullModbus);
+    int i = confMBSocket->write(tmp);
+    confMBSocket->flush();
     qDebug() << "Conf len: " << fullConfig.length() <<  "   write: " << i;
 }
 
@@ -564,7 +588,7 @@ void MainClass::proceedGroup()
 
 }
 
-void MainClass::pressureDiffToZero() // is broken now
+void MainClass::pressureDiffToZero() // it broken now
 {
     QDomElement docElem = confHandler->confDoc->documentElement();
     QDomElement element = docElem.firstChildElement("mvv");
